@@ -1,0 +1,351 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <title>ToDo</title>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <link rel="stylesheet" href="{% static 'ToDoBoard.css' %}"/>
+        <style>
+            .container-column-heading {
+                margin: 5px;
+            }
+            .container-column-box {
+                padding: 10px;
+            }
+            .submitBtn, .updateTaskbtn{
+                background: green;
+                color: white;
+                border: 1px solid green;
+            }
+            .deleteTaskbtn{
+                border: 1px solid red;
+            }    
+        </style>
+    </head>
+
+    <body>
+        <div class='ToDocontainer'>
+            <div class='container-column' id='ToDo'>
+                <h3 class='container-column-heading'>To Do</h3>
+                {% for Task in addTaskData %}
+                    {% if Task.Status == 'ToDo' %}
+                        <div class="container-column-box" id="{{Task.id}}" draggable="true">
+                            <p class='hidden'>{{Task.id}}</p>
+                            <p><strong>{{Task.Task}}</strong></p>
+                            <p>{{Task.Due_date}}</p>
+                            <p>{{Task.Description}}</p>
+                            <button class="updateTaskbtn" onclick='openUpdateTaskForm({{Task.id}}, "{{Task.Task}}", "{{Task.Due_date}}", "{{Task.Description}}")'>Update</button>
+                            <button class="deleteTaskbtn" onclick='deleteTask({{Task.id}})'>Delete</button>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <div class='container-column' id='InProgress'>
+                <h3 class='container-column-heading'>In-Progress</h3>
+                {% for Task in addTaskData %}
+                    {% if Task.Status == 'InProgress' %}
+                        <div class="container-column-box" id="{{Task.id}}" draggable="true">
+                            <p class='hidden'>{{Task.id}}</p>
+                            <p><strong>{{Task.Task}}</strong></p>
+                            <p>{{Task.Due_date}}</p>
+                            <p>{{Task.Description}}</p>
+                            <button class="updateTaskbtn" onclick='openUpdateTaskForm({{Task.id}}, "{{Task.Task}}", "{{Task.Due_date}}", "{{Task.Description}}")'>Update</button>
+                            <button class="deleteTaskbtn" onclick='deleteTask({{Task.id}})'>Delete</button>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <div class='container-column' id="Completed">
+                <h3 class='container-column-heading'>Completed</h3>
+                {% for Task in addTaskData %}
+                    {% if Task.Status == 'Completed' %}
+                        <div class="container-column-box" id="{{Task.id}}" draggable="true">
+                            <p class='hidden'>{{Task.id}}</p>
+                            <p><strong>{{Task.Task}}</strong></p>
+                            <p>{{Task.Due_date}}</p>
+                            <p>{{Task.Description}}</p>
+                            <button class="updateTaskbtn" onclick='openUpdateTaskForm({{Task.id}})'>Update</button>
+                            <button class="deleteTaskbtn" onclick='deleteTask({{Task.id}})'>Delete</button>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <div class='container-column1'>
+                <h3 class='container-column-heading'>Add a Task</h3>
+                <form class ='addTaskForm' id='addTask' method="post">{% csrf_token %}
+                    <input type="text" id="Task" name="Task" placeholder='Task' required>
+                    <input type="text" id="Description" name="Description" placeholder='Description' required>
+                    <input type="date" id="Due_date" name="Due_date" placeholder='Due Date' required>
+                    <button type="submit" class='submitBtn'>Add Task</button>
+                </form>
+                <br><br>
+                <div class='container-column-delete' id="dragtodelete" style='
+                border: 2px dotted black;
+                background: white; margin: 5px;'>
+                    <h2 class='container-column-heading' style="position: absolute;
+                    font-size: 15px;
+                    margin-left: 7%;
+                    margin-top: 3%;"><strong>Drag here to delete</strong></h2>
+                    <div style='height: 100px;
+                    background: white;'>
+                    </div>
+                </div>
+                <br>
+                <div id="updateTaskBox">
+                    <h3 class='container-column-heading'>Update a Task</h3>
+                    <form class ='updateTaskForm' id='updateTaskId' method="put">{% csrf_token %}
+                        <input type="text" id="updateTask" name="Task" placeholder='Task' required>
+                        <input type="text" id="updateDescription" name="Description" placeholder='Description' required>
+                        <input type="date" id="updateDue_date" name="Due_date" placeholder='Due Date' required>
+                        <button type="submit" class='submitBtn'>Update Task</button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+
+        <script>
+            document.getElementById('Due_date').valueAsDate = new Date();
+            document.getElementById('updateDue_date').valueAsDate = new Date();
+            let updateTaskid;
+            function openUpdateTaskForm(id, task, date, description){
+                if(document.getElementById("updateTaskBox").style.display == "block"){
+                    document.getElementById("updateTaskBox").style.display = "none";
+                }else{
+                    document.getElementById("updateTaskBox").style.display = "block";
+                    updateTaskid = id
+                }
+            }
+        </script>
+
+        <script>
+            $("#updateTaskId").submit(function (e) {
+                // preventing from page reload and default actions
+                e.preventDefault();
+                // serialize the data for sending the form data.
+                var serializedData = $(this).serialize();
+                var formData = new FormData(this);
+                console.log(serializedData, updateTaskid, formData.getAll('Task')[0])
+
+                $.ajax({
+                    url: "/todoBoard/AddtaskViewSet/"+ updateTaskid+"/",
+                    type: "PUT",
+                    dataType: "json",
+                    data: formData,
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest",
+                        "X-CSRFToken": getCookie("csrftoken"),  // don't forget to include the 'getCookie' function
+                    },
+                    processData: false,
+                    contentType: false,
+                    success: (data) => {
+                        console.log(data);
+                        updatedata = $("#"+updateTaskid).children("p")
+                        updatedata[1].innerHTML = formData.getAll('Task')[0]
+                        updatedata[2].innerHTML = formData.getAll('Due_date')[0]
+                        updatedata[3].innerHTML = formData.getAll('Description')[0]
+                        $("#updateTaskBox").css("display", "none");
+                        $('#updateTaskId').trigger("reset");
+                        document.getElementById('Due_date').valueAsDate = new Date();
+                    },
+                    error: (error) => {
+                        console.log(error);
+                    }
+                });
+            });
+        </script>
+
+        <script>
+            $("#addTask").submit(function (e) {
+                // preventing from page reload and default actions
+                e.preventDefault();
+                // serialize the data for sending the form data.
+                var serializedData = $(this).serialize();
+                $.ajax({
+                    url: "/todoBoard/AddtaskViewSet/",
+                    type: "POST",
+                    dataType: "json",
+                    data: serializedData,
+                    success: (data) => {
+                        console.log(data);
+                        var Posttaskdata = String(data['Task'])
+                        console.log(Posttaskdata)
+                        $('#addTask').trigger("reset");
+                        var adddatainmaincontainer = $("<div class='container-column-box' id="+ data["id"]+" draggable='true'>"+
+                            "<p class='hidden'>"+data['id']+"</p>"+
+                            "<p><strong>"+data['Task']+"</strong></p>"+
+                            "<p>"+data['Description']+"</p>"+
+                            "<p>"+data['Due_date']+"</p>"+
+                            "<button class='updateTaskbtn' onclick='openUpdateTaskForm("+data['id']+")'>Update</button>"+
+                            "<button class='deleteTaskbtn ml-1' onclick='deleteTask("+data['id']+")'>Delete</button></div>");
+                        $("#ToDo").append(adddatainmaincontainer)
+                        $(".container-column-box").each(function(i, item){
+                            $( this ).on('dragstart', dragStart)
+                            $( this ).on('dragend', dragEnd)
+                        });
+                        document.getElementById('Due_date').valueAsDate = new Date();
+                    },
+                    error: (error) => {
+                        console.log(error);
+                    }
+                });
+            });
+        </script>
+
+        <script>
+            let idofmoveditem;
+            let columnidofmoveditem;
+            let dragItem = null;
+            $(".container-column-box").each(function(i, item){
+                $( this ).on('dragstart', dragStart)
+                $( this ).on('dragend', dragEnd)
+            });
+            function dragStart() {
+                dragItem = this
+                setTimeout(() => this.className = 'invisible', 0)
+            }
+
+            function dragEnd() {
+                console.log('drag ended');
+                this.className = 'container-column-box';
+                console.log('dragend', this.children[0].innerHTML)
+                dragItem = null;
+                if(columnidofmoveditem=='dragtodelete'){
+                    console.log('Task Deleted')
+                    deleteTask(this.children[0].innerHTML)
+                }else{
+                    updateStatus(this.children[0].innerHTML);
+                }
+            }
+
+            $(".container-column").each(function(i, columnitem){
+                $( this ).on('dragover', dragOver);
+                $( this ).on('dragenter', dragEnter);
+                $( this ).on('dragleave', dragLeave);
+                $( this ).on('drop', dragDrop);
+            });
+            function dragOver(e) {
+                e.preventDefault()
+            }
+            function dragEnter() {
+                console.log('drag entered');
+            }
+            function dragLeave() {
+                console.log('drag left');
+            }
+
+            function dragDrop() {
+                console.log('drag dropped');
+                this.append(dragItem);
+                columnidofmoveditem = this.id
+                console.log('dragDrop', columnidofmoveditem);
+            }
+
+            $(".container-column-delete").on('dragover', dragOver);
+            $(".container-column-delete").on('dragenter', dragEnter);
+            $(".container-column-delete").on('dragleave', dragLeave);
+            $(".container-column-delete").on('drop', dragDrop);
+            
+        </script>
+
+        <script>
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== "") {
+                    const cookies = document.cookie.split(";");
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        // Does this cookie string begin with the name we want?
+                        if (cookie.substring(0, name.length + 1) === (name + "=")) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+        </script>
+
+        <script>
+            function updateStatus(id){
+                var data = new FormData();
+                var Status = columnidofmoveditem
+                data.append('Status', Status);
+                $.ajax({
+                    url: "/todoBoard/AddtaskViewSet/"+ id+"/",
+                    type: "PATCH",
+                    dataType: "json",
+                    data: data,
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest",
+                        "X-CSRFToken": getCookie("csrftoken"),
+                    },
+                    processData: false,
+                    contentType: false,
+                    success: (data) => {
+                        console.log(data);
+                        getTaskData()
+                    },
+                    error: (error) => {
+                        console.log(error);
+                    }
+                });
+            }
+        </script>
+
+        <script>
+            let getdata
+            function getTaskData(){
+                $.ajax({
+                    url: "/todoBoard/AddtaskViewSet/",
+                    type: "GET",
+                    dataType: "json",
+                    success: (data) => {
+                        console.log(data);
+                    },
+                    error: (error) => {
+                        console.log(error);
+                    }
+                });
+            }
+        </script>
+
+        <script>
+            function deleteTask(id){
+                console.log('delete Task', id)
+                $.ajax({
+                    url: "/todoBoard/AddtaskViewSet/"+id,
+                    type: "DELETE",
+                    dataType: "json",
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest",
+                        "X-CSRFToken": getCookie("csrftoken"),  
+                    },
+                    processData: false,
+                    contentType: false,
+                    success: (data) => {
+                        console.log(data);
+                        $('#'+id).remove();
+                    },
+                    error: (error) => {
+                        console.log(error);
+                    }
+                });
+            }
+        </script>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    </body>
+
+</html>
+
+{% comment %} 
+OneSignal.getUserId(function(id){console.log(id)});
+OneSignal.sendSelfNotification();
+ {% endcomment %}

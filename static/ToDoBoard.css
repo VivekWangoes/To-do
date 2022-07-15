@@ -1,0 +1,58 @@
+body{
+    background: #322f3c;
+}
+.ToDocontainer{
+    display: flex;
+    gap:10px;
+    padding: 10px
+}
+.container-column{
+    width: 350px;
+    height: 100%;
+    background: #c1c5bb;
+    border-radius: 10px;
+}
+.container-column1{
+    width: 350px;
+    height: 560px;
+    background: #c1c5bb;
+    border-radius: 10px;
+}
+.container-column-heading{
+    text-align: center;
+}
+.container-column-box{
+    background: white;
+    margin-bottom:10px;
+    padding-left: 10px;
+}
+p{
+    margin-bottom: 0px;
+}
+.addTaskForm, .updateTaskForm{
+    gap: 5px;
+    display: flex;
+    flex-direction: column;
+    margin-left: 5px;
+    margin-right: 5px;
+}
+.hidden{
+    display:none;
+}
+.updateTaskbtn{
+    height: 20px;
+    width: 45px;
+    font-size: 10px;
+    background: green;
+    color: white;
+}
+.deleteTaskbtn{
+    height: 20px;
+    width: 45px;
+    font-size: 10px;
+    background: red;
+    color: white;
+}
+#updateTaskBox{
+    display:none;
+}
